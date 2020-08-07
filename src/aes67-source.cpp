@@ -17,12 +17,17 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 */
 
 #include <obs-module.h>
+#include <util/platform.h>
+#include <util/threading.h>
 
 #include "plugin-macros.generated.h"
 
 struct aes67_source
 {
 	obs_source_t* source;
+	bool running;
+	pthread_t receiver_thread;
+	os_performance_token_t* perf_token;
 };
 
 const char* aes67_source_getname(void* data)
@@ -47,17 +52,51 @@ void aes67_source_getdefaults(obs_data_t* settings)
 	UNUSED_PARAMETER(settings);
 }
 
+void* aes67_receiver_thread(void* data)
+{
+	auto s = (struct aes67_source*)data;
+	
+	blog(LOG_INFO, "receiver thread started for source '%s'", obs_source_get_name(s->source));
+
+	if (s->perf_token) {
+		os_end_high_performance(s->perf_token);
+	}
+	s->perf_token = os_request_high_performance("AES67 Receiver Thread");
+
+	while (s->running) {
+		// TODO loop
+		os_sleep_ms(1);
+	}
+
+	os_end_high_performance(s->perf_token);
+	s->perf_token = NULL;
+
+	blog(LOG_INFO, "receiver thread ended for source '%s'", obs_source_get_name(s->source));
+	return NULL;
+}
+
 void aes67_source_update(void* data, obs_data_t* settings)
 {
 	auto s = (struct aes67_source*)data;
-	// TODO
-	UNUSED_PARAMETER(s);
+	
+	if (s->running) {
+		s->running = false;
+		pthread_join(s->receiver_thread, NULL);	
+	}
+	s->running = false;
+
+	// TODO setup receiver
+
+	s->running = true;
+	pthread_create(&s->receiver_thread, NULL, &aes67_receiver_thread, (void*)s);
 }
 
 void* aes67_source_create(obs_data_t* settings, obs_source_t* source)
 {
 	auto s = (struct aes67_source*)bzalloc(sizeof(struct aes67_source));
 	s->source = source;
+	s->running = false;
+	s->perf_token = NULL;
 	aes67_source_update(s, settings);
 	return s;
 }
@@ -65,6 +104,8 @@ void* aes67_source_create(obs_data_t* settings, obs_source_t* source)
 void aes67_source_destroy(void* data)
 {
 	auto s = (struct aes67_source*)data;
+	s->running = false;
+	pthread_join(s->receiver_thread, NULL);
 	bfree(s);
 }
 
