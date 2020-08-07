@@ -28,7 +28,7 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 OBS_DECLARE_MODULE()
 OBS_MODULE_USE_DEFAULT_LOCALE(PLUGIN_NAME, "en-US")
 
-extern struct obs_source_info create_aes67_source_info();
+extern const struct obs_source_info create_aes67_source_info();
 struct obs_source_info aes67_source_info;
 
 void on_finished_loading(void* param);
