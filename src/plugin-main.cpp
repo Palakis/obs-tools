@@ -28,11 +28,17 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 OBS_DECLARE_MODULE()
 OBS_MODULE_USE_DEFAULT_LOCALE(PLUGIN_NAME, "en-US")
 
+extern struct obs_source_info create_aes67_source_info();
+struct obs_source_info aes67_source_info;
+
 void on_finished_loading(void* param);
 
 bool obs_module_load(void)
 {
 	blog(LOG_INFO, "version %s", PLUGIN_VERSION);
+
+	aes67_source_info = create_aes67_source_info();
+	obs_register_source(&aes67_source_info);
 
 	// defer GUI setup when frontend is ready
 	utils::register_frontend_event_once(

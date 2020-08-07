@@ -50,7 +50,8 @@ set(PLUGIN_SOURCES
 	src/plugin-main.cpp
     src/utils.cpp
     src/QStatusLabel.cpp
-    src/status-label.cpp)
+    src/status-label.cpp
+    src/aes67-source.cpp)
 
 set(PLUGIN_HEADERS
 	src/plugin-macros.generated.h
