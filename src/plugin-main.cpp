@@ -32,15 +32,15 @@ void on_finished_loading(void* param);
 
 bool obs_module_load(void)
 {
-    blog(LOG_INFO, "version %s", PLUGIN_VERSION);
+	blog(LOG_INFO, "version %s", PLUGIN_VERSION);
 
-    // defer GUI setup when frontend is ready
+	// defer GUI setup when frontend is ready
 	utils::register_frontend_event_once(
 		OBS_FRONTEND_EVENT_FINISHED_LOADING, on_finished_loading, nullptr
 	);
 
-    blog(LOG_INFO, "plugin loaded successfully (version %s)", PLUGIN_VERSION);
-    return true;
+	blog(LOG_INFO, "plugin loaded successfully (version %s)", PLUGIN_VERSION);
+	return true;
 }
 
 void on_finished_loading(void* param)
@@ -53,8 +53,8 @@ void on_finished_loading(void* param)
 
 void obs_module_unload()
 {
-    // call teardown procedure(s)
+	// call teardown procedure(s)
 	status_label::teardown();
 
-    blog(LOG_INFO, "plugin unloaded");
+	blog(LOG_INFO, "plugin unloaded");
 }
