@@ -1,6 +1,6 @@
 /*
-Plugin Name
-Copyright (C) <Year> <Developer> <Email Address>
+obs-tools
+Copyright (C) 2020	Stéphane Lepin <stephane.lepin@gmail.com>
 
 This program is free software; you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -16,20 +16,11 @@ You should have received a copy of the GNU General Public License along
 with this program. If not, see <https://www.gnu.org/licenses/>
 */
 
-#include <obs-module.h>
+#pragma once
 
-#include "plugin-macros.generated.h"
+#include <obs-frontend-api.h>
 
-OBS_DECLARE_MODULE()
-OBS_MODULE_USE_DEFAULT_LOCALE(PLUGIN_NAME, "en-US")
-
-bool obs_module_load(void)
-{
-    blog(LOG_INFO, "plugin loaded successfully (version %s)", PLUGIN_VERSION);
-    return true;
-}
-
-void obs_module_unload()
-{
-    blog(LOG_INFO, "plugin unloaded");
-}
+namespace utils {
+	typedef void (*event_cb)(void* private_data);
+	void register_frontend_event_once(enum obs_frontend_event event, event_cb cb, void* private_data);
+};
