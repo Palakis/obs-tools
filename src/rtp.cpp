@@ -19,6 +19,7 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 #include <memory>
 #include <cstring>
 #include <iostream>
+#include <util/bmem.h>
 
 #include "rtp.h"
 #include "utils.h"
@@ -28,28 +29,58 @@ using namespace utils;
 
 rtp_packet* rtp_packet_new()
 {
-	auto packet = (rtp_packet*)malloc(sizeof(rtp_packet));
+	auto packet = (rtp_packet*)bmalloc(sizeof(rtp_packet));
 	memset(packet, 0, sizeof(rtp_packet));
 	packet->version = 2;
 	return packet;
 }
 
-rtp_packet* rtp_packet_decode(const uint8_t* buf, size_t bufLen)
+void rtp_packet_free(rtp_packet* packet)
 {
+	if (!packet) {
+		return;
+	}
+
+	if (packet->csrcCount > 0) {
+		bfree(packet->csrc);
+	}
+
+	if (packet->extension) {
+		bfree(packet->extensionHeader);
+	}
+
+	bfree(packet->payload);
+	bfree(packet);
+}
+
+void* safe_brealloc(void* ptr, size_t size)
+{
+	if (ptr) {
+		return brealloc(ptr, size);
+	} else {
+		return bmalloc(size);
+	}
+}
+
+bool rtp_packet_decode(const uint8_t* buf, uint32_t bufLen, rtp_packet* packet)
+{
+	if (!packet) {
+		cerr << "rtp_packet_decode: invalid dest packet pointer" << endl;
+		return false;
+	}
+
 	if (bufLen <= 12) {
 		cerr << "rtp_packet_decode: packet too short (" << bufLen << "bytes)" << endl;
-		return nullptr;
+		return false;
 	}
-
-	auto packet = rtp_packet_new();
 
 	// First byte
-	packet->version = ((buf[0] >> 6) & 0b11);
-	if (packet->version != 2) {
+	uint8_t rtp_version = ((buf[0] >> 6) & 0b11);
+	if (rtp_version != 2) {
 		cout << "rtp_packet_decode: invalid packet version: " << packet->version << endl;
-		rtp_packet_free(packet);
-		return nullptr;
+		return false;
 	}
+	packet->version = rtp_version;
 
 	uint32_t index = 0;
 
@@ -80,12 +111,13 @@ rtp_packet* rtp_packet_decode(const uint8_t* buf, size_t bufLen)
 		if (packet->csrcCount > 15) {
 			cerr << "rtp_packet_decode: invalid CSRC count"
 				 << " (found " << packet->csrcCount << ", should not be above 15)" << endl;
-			rtp_packet_free(packet);
-			return nullptr;
 		 }
 
 		uint32_t csrcFieldLength = (packet->csrcCount * 4);
-		packet->csrc = (uint32_t*)malloc(csrcFieldLength);
+		if (csrcFieldLength != packet->_csrcFieldLength) {
+			packet->csrc = (uint32_t*)safe_brealloc(packet->csrc, csrcFieldLength);
+		}
+		packet->_csrcFieldLength = csrcFieldLength;
 
 		for (size_t i = 0; i < packet->csrcCount; i++) {
 			const uint8_t* valuePtr = &buf[index + (i * sizeof(uint32_t))];
@@ -97,10 +129,14 @@ rtp_packet* rtp_packet_decode(const uint8_t* buf, size_t bufLen)
 
 	if (packet->extension) {
 		packet->extensionHeaderId = read_uint16(&buf[index]);
-		packet->extensionHeaderLength = read_uint16(&buf[index + 2]);
+		uint16_t extensionHeaderLength = read_uint16(&buf[index + 2]);
 		index += 4;
 
-		packet->extensionHeader = (uint8_t*)malloc(packet->extensionHeaderLength);
+		if (extensionHeaderLength != packet->extensionHeaderLength) {
+			packet->extensionHeader = (uint8_t*)safe_brealloc(packet->extensionHeader, extensionHeaderLength);
+		}
+		packet->extensionHeaderLength = extensionHeaderLength;
+
 		memcpy(
 			packet->extensionHeader, &buf[index],
 			packet->extensionHeaderLength
@@ -109,14 +145,19 @@ rtp_packet* rtp_packet_decode(const uint8_t* buf, size_t bufLen)
 		index += packet->extensionHeaderLength;
 	}
 
-	packet->payloadLength = (bufLen - index);
-	packet->payload = (uint8_t*)malloc(packet->payloadLength);
+	uint32_t payloadLength = (bufLen - index);
+	if (payloadLength != packet->payloadLength) {
+		packet->payload = (uint8_t*)safe_brealloc(packet->payload, payloadLength);
+	}
+	packet->payloadLength = payloadLength;
+	
 	memcpy(
 		packet->payload, &buf[index],
 		packet->payloadLength
 	);
 
-	return packet;
+	// TODO return read bytes
+	return true;
 }
 
 size_t rtp_packet_encode(const rtp_packet* packet, uint8_t* buf, size_t bufLen)
@@ -203,22 +244,4 @@ size_t rtp_packet_get_byte_count(const rtp_packet* packet)
 	}
 
 	return packetSize;
-}
-
-void rtp_packet_free(rtp_packet* packet)
-{
-	if (!packet) {
-		return;
-	}
-
-	if (packet->csrcCount > 0) {
-		free(packet->csrc);
-	}
-
-	if (packet->extension) {
-		free(packet->extensionHeader);
-	}
-
-	free(packet->payload);
-	free(packet);
 }
