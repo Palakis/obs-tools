@@ -6,6 +6,10 @@ set(PLUGIN_AUTHOR "Stephane Lepin")
 set(MACOS_BUNDLEID "fr.palakis.obs-tools")
 set(LINUX_MAINTAINER_EMAIL "stephane.lepin@gmail.com")
 
+set(CLSOCKET_SHARED OFF)
+set(CLSOCKET_EXAMPLES OFF)
+add_subdirectory(deps/clsocket)
+
 # TAKE NOTE: No need to edit things past this point
 
 set(CMAKE_PREFIX_PATH "${QTDIR}")
@@ -66,12 +70,14 @@ include_directories(
 	"${LIBOBS_INCLUDE_DIR}/../UI/obs-frontend-api"
 	${Qt5Core_INCLUDES}
 	${Qt5Widgets_INCLUDES}
+    "deps/clsocket/src"
 )
 
 target_link_libraries(${CMAKE_PROJECT_NAME}
 	libobs
 	Qt5::Core
 	Qt5::Widgets
+    clsocket
 )
 
 # --- End of section ---
