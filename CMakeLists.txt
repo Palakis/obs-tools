@@ -100,8 +100,11 @@ if(WIN32)
 		"${LIBOBS_INCLUDE_DIR}/../${OBS_BUILDDIR_ARCH}/UI"
 	)
 
+    find_package(w32-pthreads REQUIRED)
+
 	target_link_libraries(${CMAKE_PROJECT_NAME}
 		"${OBS_FRONTEND_LIB}"
+        w32-pthreads
     )
 
 	# --- Release package helper ---
