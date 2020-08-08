@@ -10,7 +10,7 @@ set(CLSOCKET_SHARED OFF)
 set(CLSOCKET_EXAMPLES OFF)
 set(CLSOCKET_DEP_ONLY ON)
 set(BUILD_SHARED_LIBS OFF)
-add_subdirectory(deps/clsocket)
+add_subdirectory(deps/clsocket EXCLUDE_FROM_ALL)
 
 # TAKE NOTE: No need to edit things past this point
 
