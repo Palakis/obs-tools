@@ -8,7 +8,7 @@ set(LINUX_MAINTAINER_EMAIL "stephane.lepin@gmail.com")
 
 set(CLSOCKET_SHARED OFF)
 set(CLSOCKET_EXAMPLES OFF)
-add_subdirectory(deps/clsocket)
+add_subdirectory(deps/clsocket EXCLUDE_FROM_ALL)
 
 # TAKE NOTE: No need to edit things past this point
 
