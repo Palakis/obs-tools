@@ -20,10 +20,9 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 
 #include <stdint.h>
 
-// Ethernet MTU (1500) - IP header length (60) - UDP header length (8)
-#define MAX_PACKET_LENGTH 1432
+#define MAX_PACKET_LENGTH 1440
 #define MAX_CSRC_COUNT 15
-#define MAX_SAMPLES_PER_PACKET 240
+#define MAX_L24_SAMPLES_PER_PACKET 240
 
 struct rtp_packet {
 	uint8_t version;

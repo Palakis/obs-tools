@@ -123,7 +123,7 @@ void* aes67_receiver_thread(void* data)
 	audioFrame.speakers = s->speakers;
 	audioFrame.samples_per_sec = s->sample_rate;
 
-	int32_t l32ConvBuf[MAX_SAMPLES_PER_PACKET * s->speakers * sizeof(int32_t)];
+	int32_t l32ConvBuf[MAX_L24_SAMPLES_PER_PACKET * s->speakers * sizeof(int32_t)];
 	memset(&l32ConvBuf, 0, sizeof(l32ConvBuf));
 
 	bool convert24BitTo32Bit = false;
