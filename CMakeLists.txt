@@ -129,7 +129,7 @@ if(WIN32)
 
     add_custom_command(TARGET ${CMAKE_PROJECT_NAME} POST_BUILD
         # If config is Release or RelWithDebInfo, package release files
-        COMMAND $<OR:$<CONFIG:Release>,$<CONFIG:RelWithDebInfo>>==1 (
+        COMMAND if $<OR:$<CONFIG:Release>,$<CONFIG:RelWithDebInfo>>==1 (
             "${CMAKE_COMMAND}" -E make_directory
                 "${RELEASE_DIR}/data/obs-plugins/${CMAKE_PROJECT_NAME}"
                 "${RELEASE_DIR}/obs-plugins/${ARCH_NAME}"
