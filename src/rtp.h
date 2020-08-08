@@ -39,8 +39,5 @@ typedef struct {
 	uint8_t* payload;
 } rtp_packet;
 
-rtp_packet* rtp_packet_new();
-void rtp_packet_free(rtp_packet* packet);
+void rtp_packet_deinit(rtp_packet* packet);
 bool rtp_packet_decode(const uint8_t* buf, size_t bufLen, rtp_packet* packet);
-size_t rtp_packet_encode(const rtp_packet* packet, uint8_t* buf, size_t bufLen);
-size_t rtp_packet_get_byte_count(const rtp_packet* packet);
