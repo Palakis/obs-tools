@@ -27,34 +27,6 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 using namespace std;
 using namespace utils;
 
-void rtp_packet_deinit(rtp_packet* packet)
-{
-	if (!packet) {
-		return;
-	}
-
-	if (packet->csrcCount > 0) {
-		bfree(packet->csrc);
-	}
-
-	if (packet->extension) {
-		bfree(packet->extensionHeader);
-	}
-
-	if (packet->payload) {
-		bfree(packet->payload);
-	}
-}
-
-void* safe_brealloc(void* ptr, size_t size)
-{
-	if (ptr) {
-		return brealloc(ptr, size);
-	} else {
-		return bmalloc(size);
-	}
-}
-
 bool rtp_packet_decode(const uint8_t* buf, uint32_t bufLen, rtp_packet* packet)
 {
 	if (!packet) {
@@ -104,48 +76,33 @@ bool rtp_packet_decode(const uint8_t* buf, uint32_t bufLen, rtp_packet* packet)
 		if (packet->csrcCount > 15) {
 			cerr << "rtp_packet_decode: invalid CSRC count"
 				 << " (found " << packet->csrcCount << ", should not be above 15)" << endl;
-		 }
-
-		uint32_t csrcFieldLength = (packet->csrcCount * 4);
-		if (csrcFieldLength != packet->_csrcFieldLength) {
-			packet->csrc = (uint32_t*)safe_brealloc(packet->csrc, csrcFieldLength);
+			return false;
 		}
-		packet->_csrcFieldLength = csrcFieldLength;
-
+		
 		for (size_t i = 0; i < packet->csrcCount; i++) {
 			const uint8_t* valuePtr = &buf[index + (i * sizeof(uint32_t))];
 			packet->csrc[i] = read_uint32(valuePtr);
 		}
 
-		index += csrcFieldLength;
+		index += (packet->csrcCount * 4);;
 	}
 
 	if (packet->extension) {
 		packet->extensionHeaderId = read_uint16(&buf[index]);
-		uint16_t extensionHeaderLength = read_uint16(&buf[index + 2]);
+		packet->extensionHeaderLength = read_uint16(&buf[index + 2]);
 		index += 4;
 
-		if (extensionHeaderLength != packet->extensionHeaderLength) {
-			packet->extensionHeader = (uint8_t*)safe_brealloc(packet->extensionHeader, extensionHeaderLength);
-		}
-		packet->extensionHeaderLength = extensionHeaderLength;
-
 		memcpy(
-			packet->extensionHeader, &buf[index],
+			&packet->extensionHeader, &buf[index],
 			packet->extensionHeaderLength
 		);
 
 		index += packet->extensionHeaderLength;
 	}
 
-	uint32_t payloadLength = (bufLen - index);
-	if (payloadLength != packet->payloadLength) {
-		packet->payload = (uint8_t*)safe_brealloc(packet->payload, payloadLength);
-	}
-	packet->payloadLength = payloadLength;
-	
+	packet->payloadLength = (bufLen - index);	
 	memcpy(
-		packet->payload, &buf[index],
+		&packet->payload, &buf[index],
 		packet->payloadLength
 	);
 

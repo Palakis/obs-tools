@@ -20,6 +20,10 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 
 #include <stdint.h>
 
+// Ethernet MTU (1500) - IP header length (60) - UDP header length (8)
+#define MAX_PACKET_LENGTH 1432
+#define MAX_CSRC_COUNT 15
+
 typedef struct {
 	uint8_t version;
 	bool padding;
@@ -30,13 +34,12 @@ typedef struct {
 	uint16_t sequenceNumber;
 	uint32_t timestamp;
 	uint32_t ssrc;
-	uint32_t _csrcFieldLength;
-	uint32_t* csrc;
+	uint32_t csrc[MAX_CSRC_COUNT];
 	uint16_t extensionHeaderId;
 	uint16_t extensionHeaderLength;
-	uint8_t* extensionHeader;
+	uint8_t extensionHeader[MAX_PACKET_LENGTH];
 	uint32_t payloadLength;
-	uint8_t* payload;
+	uint8_t payload[MAX_PACKET_LENGTH];
 } rtp_packet;
 
 void rtp_packet_deinit(rtp_packet* packet);
