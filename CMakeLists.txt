@@ -8,9 +8,8 @@ set(LINUX_MAINTAINER_EMAIL "stephane.lepin@gmail.com")
 
 set(CLSOCKET_SHARED OFF)
 set(CLSOCKET_EXAMPLES OFF)
-set(BUILD_SHARED_LIBS OFF)
+set(CLSOCKET_DEP_ONLY ON)
 add_subdirectory(deps/clsocket)
-set(BUILD_SHARED_LIBS ON)
 
 # TAKE NOTE: No need to edit things past this point
 
