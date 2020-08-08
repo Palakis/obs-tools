@@ -23,8 +23,9 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 // Ethernet MTU (1500) - IP header length (60) - UDP header length (8)
 #define MAX_PACKET_LENGTH 1432
 #define MAX_CSRC_COUNT 15
+#define MAX_SAMPLES_PER_PACKET 240
 
-typedef struct {
+struct rtp_packet {
 	uint8_t version;
 	bool padding;
 	bool extension;
@@ -40,7 +41,7 @@ typedef struct {
 	uint8_t extensionHeader[MAX_PACKET_LENGTH];
 	uint32_t payloadLength;
 	uint8_t payload[MAX_PACKET_LENGTH];
-} rtp_packet;
+};
 
-void rtp_packet_deinit(rtp_packet* packet);
-bool rtp_packet_decode(const uint8_t* buf, uint32_t bufLen, rtp_packet* packet);
+void rtp_packet_deinit(struct rtp_packet* packet);
+bool rtp_packet_decode(const uint8_t* buf, uint32_t bufLen, struct rtp_packet* packet);

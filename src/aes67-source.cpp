@@ -113,11 +113,18 @@ void* aes67_receiver_thread(void* data)
 	socket.Initialize();
 
 	uint8_t recvBuf[MAX_PACKET_LENGTH];
-	rtp_packet rtpPacket = {};
+	memset(&recvBuf, 0, sizeof(recvBuf));
 
-	obs_source_audio audioFrame = {};
+	struct rtp_packet rtpPacket = {};
+	memset(&rtpPacket, 0, sizeof(rtpPacket));
+
+	struct obs_source_audio audioFrame = {};
+	memset(&audioFrame, 0, sizeof(audioFrame));
 	audioFrame.speakers = s->speakers;
 	audioFrame.samples_per_sec = s->sample_rate;
+
+	int32_t l32ConvBuf[MAX_SAMPLES_PER_PACKET * s->speakers * sizeof(int32_t)];
+	memset(&l32ConvBuf, 0, sizeof(l32ConvBuf));
 
 	bool convert24BitTo32Bit = false;
 	switch (s->sample_format) {
@@ -154,12 +161,26 @@ void* aes67_receiver_thread(void* data)
 		}
 
 		audioFrame.timestamp = os_gettime_ns();
-		audioFrame.frames = (rtpPacket.payloadLength / (int)s->speakers);
 
 		if (convert24BitTo32Bit) {
-			// TODO convert
+			// L24 = three-byte samples
+			size_t samples = (rtpPacket.payloadLength / 3);
+			audioFrame.frames = (samples / (int)s->speakers);
+			audioFrame.data[0] = (uint8_t*)&l32ConvBuf;
+
+			for (size_t i = 0; i < samples; i++) {
+				uint8_t* sample = (&rtpPacket.payload)[i];
+				// convert each 24-bit (three-byte) sample to a 32-bit (four-byte) sample
+				l32ConvBuf[i] = (
+					((sample[0] << 16) & 0xFF0000) |
+					((sample[1] << 8)  & 0x00FF00) |
+					( sample[2]        & 0x0000FF)
+				);
+			}
 		} else {
-			audioFrame.data[0] = rtpPacket.payload;
+			// L16 = two-byte samples
+			audioFrame.frames = ((rtpPacket.payloadLength / 2) / (int)s->speakers);
+			audioFrame.data[0] = (uint8_t*)&rtpPacket.payload;
 		}
 
 		obs_source_output_audio(s->source, &audioFrame);
