@@ -8,7 +8,7 @@ set(LINUX_MAINTAINER_EMAIL "stephane.lepin@gmail.com")
 
 set(CLSOCKET_SHARED OFF)
 set(CLSOCKET_EXAMPLES OFF)
-add_subdirectory(deps/clsocket EXCLUDE_FROM_ALL)
+add_subdirectory(deps/clsocket)
 
 # TAKE NOTE: No need to edit things past this point
 
@@ -91,9 +91,14 @@ if(WIN32)
 		message(FATAL_ERROR "Could not find OBS Frontend API\'s library !")
 	endif()
 
-    # Enable Multicore Builds and disable FH4 (to not depend on VCRUNTIME140_1.DLL when building with VS2019)
+    add_definitions(-DWIN32)
+
     if (MSVC)
+        # Enable Multicore Builds and disable FH4 (to not depend on VCRUNTIME140_1.DLL when building with VS2019)
         add_definitions(/MP /d2FH4-)
+
+        # clsocket fix
+        add_definitions(-D_WINSOCK_DEPRECATED_NO_WARNINGS)
     endif()
 
 	if(CMAKE_SIZEOF_VOID_P EQUAL 8)
