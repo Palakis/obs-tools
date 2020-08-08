@@ -55,13 +55,15 @@ set(PLUGIN_SOURCES
     src/utils.cpp
     src/QStatusLabel.cpp
     src/status-label.cpp
-    src/aes67-source.cpp)
+    src/aes67-source.cpp
+    src/rtp.cpp)
 
 set(PLUGIN_HEADERS
 	src/plugin-macros.generated.h
     src/utils.h
     src/QStatusLabel.h
-    src/status-label.h)
+    src/status-label.h
+    src/rtp.h)
 
 # --- Platform-independent build settings ---
 add_library(${CMAKE_PROJECT_NAME} MODULE ${PLUGIN_SOURCES} ${PLUGIN_HEADERS})

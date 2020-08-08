@@ -18,16 +18,28 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 
 #pragma once
 
-#include <obs-frontend-api.h>
 #include <stdint.h>
 
-namespace utils {
-	typedef void (*event_cb)(void* private_data);
-	void register_frontend_event_once(enum obs_frontend_event event, event_cb cb, void* private_data);
+typedef struct {
+	uint8_t version;
+	bool padding;
+	bool extension;
+	uint8_t csrcCount;
+	bool marker;
+	uint8_t payloadType;
+	uint16_t sequenceNumber;
+	uint32_t timestamp;
+	uint32_t ssrc;
+	uint32_t* csrc;
+	uint16_t extensionHeaderId;
+	uint16_t extensionHeaderLength;
+	uint8_t* extensionHeader;
+	uint32_t payloadLength;
+	uint8_t* payload;
+} rtp_packet;
 
-	uint16_t read_uint16(const uint8_t* src);
-	void write_uint16(uint8_t* dest, const uint16_t value);
-
-	uint32_t read_uint32(const uint8_t* src);
-	void write_uint32(uint8_t* dest, const uint32_t value);
-};
+rtp_packet* rtp_packet_new();
+rtp_packet* rtp_packet_decode(const uint8_t* buf, size_t bufLen);
+size_t rtp_packet_encode(const rtp_packet* packet, uint8_t* buf, size_t bufLen);
+size_t rtp_packet_get_byte_count(const rtp_packet* packet);
+void rtp_packet_free(rtp_packet* packet);

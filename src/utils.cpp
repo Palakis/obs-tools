@@ -47,3 +47,35 @@ void utils::register_frontend_event_once(enum obs_frontend_event cbEventCode, ev
 
 	obs_frontend_add_event_callback(ctx->eventHandler, (void*)ctx);
 }
+
+uint16_t utils::read_uint16(const uint8_t* src)
+{
+	return (uint16_t)(
+		((src[0] << 8) & 0xFF00) |
+		( src[1]       & 0x00FF)
+	);
+}
+
+void utils::write_uint16(uint8_t* dest, const uint16_t value)
+{
+	dest[0] = (value & 0xFF00) >> 8;
+	dest[1] = (value & 0x00FF);
+}
+
+uint32_t utils::read_uint32(const uint8_t* src)
+{
+	return (uint32_t)(
+		((src[0] << 24) & 0xFF000000) |
+		((src[1] << 16) & 0x00FF0000) |
+		((src[2] << 8)  & 0x0000FF00) |
+		( src[3]        & 0x000000FF)
+	);
+}
+
+void utils::write_uint32(uint8_t* dest, const uint32_t value)
+{
+	dest[0] = (value & 0xFF000000) >> 24;
+	dest[1] = (value & 0x00FF0000) >> 16;
+	dest[2] = (value & 0x0000FF00) >> 8;
+	dest[3] = (value & 0x000000FF);
+}
