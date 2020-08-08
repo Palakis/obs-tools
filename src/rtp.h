@@ -43,4 +43,4 @@ typedef struct {
 } rtp_packet;
 
 void rtp_packet_deinit(rtp_packet* packet);
-bool rtp_packet_decode(const uint8_t* buf, size_t bufLen, rtp_packet* packet);
+bool rtp_packet_decode(const uint8_t* buf, uint32_t bufLen, rtp_packet* packet);
