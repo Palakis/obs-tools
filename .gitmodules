@@ -1,3 +1,3 @@
 [submodule "deps/clsocket"]
 	path = deps/clsocket
-	url = https://github.com/DFHack/clsocket.git
+	url = https://github.com/Palakis/clsocket.git
