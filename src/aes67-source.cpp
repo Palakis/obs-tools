@@ -20,8 +20,10 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 #include <obs-module.h>
 #include <util/platform.h>
 #include <util/threading.h>
+#include <PassiveSocket.h>
 
 #include "plugin-macros.generated.h"
+#include "rtp.h"
 
 #define P_MULTICAST_GROUP "multicast_group"
 #define P_SAMPLE_RATE "sample_rate"
@@ -66,6 +68,7 @@ obs_properties_t* aes67_source_getproperties(void* data)
 		P_SAMPLE_RATE, "Sample Rate",
 		OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT
 	);
+	obs_property_list_add_int(prop, "44.1 kHz", 44100);
 	obs_property_list_add_int(prop, "48 kHz", 48000);
 	obs_property_list_add_int(prop, "96 kHz", 96000);
 
@@ -106,11 +109,65 @@ void* aes67_receiver_thread(void* data)
 	}
 	s->perf_token = os_request_high_performance("AES67 Receiver Thread");
 
-	while (s->running) {
-		// TODO loop
-		os_sleep_ms(1);
+	CPassiveSocket socket(CPassiveSocket::CSocketType::SocketTypeUdp);
+	socket.Initialize();
+
+	uint8_t recvBuf[MAX_PACKET_LENGTH];
+	rtp_packet rtpPacket = {};
+
+	obs_source_audio audioFrame = {};
+	audioFrame.speakers = s->speakers;
+	audioFrame.samples_per_sec = s->sample_rate;
+
+	bool convert24BitTo32Bit = false;
+	switch (s->sample_format) {
+		case O_SAMPLE_FORMAT_L16:
+			audioFrame.format = AUDIO_FORMAT_16BIT;
+			break;
+		
+		case O_SAMPLE_FORMAT_L24:
+			convert24BitTo32Bit = true;
+			audioFrame.format = AUDIO_FORMAT_32BIT;
+			break;
+
+		default:
+			blog(LOG_ERROR, "unsupported sample format: %d", s->sample_format);
+			goto receiver_finished;
 	}
 
+	if (!socket.BindMulticast(NULL, s->multicast_group, 5004)) {
+		blog(LOG_ERROR, "failed to bind to multicast group %s", s->multicast_group);
+		goto receiver_finished;
+	}
+
+	while (s->running) {
+		int32 receivedBytes = socket.Receive(MAX_PACKET_LENGTH, (uint8_t*)&recvBuf);
+		if (!receivedBytes) {
+			blog(LOG_WARNING, "No bytes received (%d)", receivedBytes);
+			continue;
+		}
+
+		bool success = rtp_packet_decode(recvBuf, receivedBytes, &rtpPacket);
+		if (!success) {
+			blog(LOG_ERROR, "RTP decoding failed");
+			continue;
+		}
+
+		audioFrame.timestamp = os_gettime_ns();
+		audioFrame.frames = (rtpPacket.payloadLength / (int)s->speakers);
+
+		if (convert24BitTo32Bit) {
+			// TODO convert
+		} else {
+			audioFrame.data[0] = rtpPacket.payload;
+		}
+
+		obs_source_output_audio(s->source, &audioFrame);
+	}
+
+	socket.Close();
+
+receiver_finished:
 	os_end_high_performance(s->perf_token);
 	s->perf_token = NULL;
 
