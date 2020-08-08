@@ -6,11 +6,6 @@ set(PLUGIN_AUTHOR "Stephane Lepin")
 set(MACOS_BUNDLEID "fr.palakis.obs-tools")
 set(LINUX_MAINTAINER_EMAIL "stephane.lepin@gmail.com")
 
-set(CLSOCKET_SHARED OFF)
-set(CLSOCKET_EXAMPLES OFF)
-set(CLSOCKET_DEP_ONLY ON)
-add_subdirectory(deps/clsocket EXCLUDE_FROM_ALL)
-
 # TAKE NOTE: No need to edit things past this point
 
 set(CMAKE_PREFIX_PATH "${QTDIR}")
@@ -28,6 +23,11 @@ endif()
 
 find_package(LibObs REQUIRED)
 find_package(Qt5 REQUIRED COMPONENTS Core Widgets)
+
+set(CLSOCKET_SHARED OFF)
+set(CLSOCKET_EXAMPLES OFF)
+set(CLSOCKET_DEP_ONLY ON)
+add_subdirectory(deps/clsocket EXCLUDE_FROM_ALL)
 
 configure_file(
     src/plugin-macros.h.in
