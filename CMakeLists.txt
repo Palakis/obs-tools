@@ -74,7 +74,7 @@ include_directories(
 	"${LIBOBS_INCLUDE_DIR}/../UI/obs-frontend-api"
 	${Qt5Core_INCLUDES}
 	${Qt5Widgets_INCLUDES}
-    "deps/clsocket/src"
+    "${CMAKE_SOURCE_DIR}/deps/clsocket/src"
 )
 
 target_link_libraries(${CMAKE_PROJECT_NAME}
