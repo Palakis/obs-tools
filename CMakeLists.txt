@@ -93,7 +93,8 @@ if(WIN32)
 		message(FATAL_ERROR "Could not find OBS Frontend API\'s library !")
 	endif()
 
-    add_definitions(-DWIN32)
+    # clsocket fix
+    add_definitions(-DWIN32 -D_WIN32)
 
     if (MSVC)
         # Enable Multicore Builds and disable FH4 (to not depend on VCRUNTIME140_1.DLL when building with VS2019)
