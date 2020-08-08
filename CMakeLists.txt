@@ -25,7 +25,6 @@ find_package(LibObs REQUIRED)
 find_package(Qt5 REQUIRED COMPONENTS Core Widgets)
 
 set(CLSOCKET_SHARED OFF)
-set(CLSOCKET_EXAMPLES OFF)
 set(CLSOCKET_DEP_ONLY ON)
 add_subdirectory(deps/clsocket EXCLUDE_FROM_ALL)
 
