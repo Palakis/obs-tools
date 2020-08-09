@@ -112,6 +112,9 @@ void* aes67_receiver_thread(void* data)
 	CPassiveSocket socket(CPassiveSocket::CSocketType::SocketTypeUdp);
 	socket.Initialize();
 
+	// receive timeout: 5 milliseconds
+	socket.SetReceiveTimeout(0, 5000);
+
 	uint8_t recvBuf[MAX_PACKET_LENGTH];
 	memset(&recvBuf, 0, sizeof(recvBuf));
 
@@ -149,7 +152,7 @@ void* aes67_receiver_thread(void* data)
 
 	while (s->running) {
 		int32 receivedBytes = socket.Receive(MAX_PACKET_LENGTH, (uint8_t*)&recvBuf);
-		if (!receivedBytes) {
+		if (receivedBytes <= 0) {
 			blog(LOG_WARNING, "No bytes received (%d)", receivedBytes);
 			continue;
 		}
