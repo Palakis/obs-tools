@@ -135,7 +135,7 @@ void* aes67_receiver_thread(void* data)
 	audioFrame.samples_per_sec = s->sample_rate;
 
 	// Buffer for at most 240 32-bit samples of surround audio
-	uint8_t l32ConvBuf[MAX_L24_SAMPLES_PER_PACKET * 8 * 4];
+	int32_t l32ConvBuf[MAX_L24_SAMPLES_PER_PACKET * 8];
 	memset(&l32ConvBuf, 0, sizeof(l32ConvBuf));
 
 	bool convert24BitTo32Bit = false;
@@ -177,17 +177,12 @@ void* aes67_receiver_thread(void* data)
 			// L24 = three-byte samples
 			size_t samples = (rtpPacket.payloadLength / 3);
 			for (size_t i = 0; i < samples; i++) {
-				// S32LE
-				uint8_t* dst = ((uint8_t*)&l32ConvBuf) + (i * 4);
-				// S24LE
 				uint8_t* src = ((uint8_t*)&rtpPacket.payload) + (i * 3);
-
-				// Move the sign bit to the beginning of the 32-bit number
-				bool isNegative = ( (src[0] & 0x80) == 0x80 );
-				dst[0] = ( isNegative ? 0xFF : 0 );
-				dst[1] = ( isNegative ? (src[0] & 0x7F) : src[0]);
-				dst[2] = src[1];
-				dst[3] = src[2];
+				l32ConvBuf[i] = ((
+					(src[0] << 24) |
+					(src[1] << 16) |
+					(src[2] << 8)
+				) >> 8) * 100;
 			}
 
 			audioFrame.frames = (samples / (int)s->speakers);
