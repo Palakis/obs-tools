@@ -56,12 +56,6 @@ uint16_t utils::read_uint16(const uint8_t* src)
 	);
 }
 
-void utils::write_uint16(uint8_t* dest, const uint16_t value)
-{
-	dest[0] = (value & 0xFF00) >> 8;
-	dest[1] = (value & 0x00FF);
-}
-
 uint32_t utils::read_uint32(const uint8_t* src)
 {
 	return (uint32_t)(
@@ -70,12 +64,4 @@ uint32_t utils::read_uint32(const uint8_t* src)
 		((src[2] << 8)  & 0x0000FF00) |
 		( src[3]        & 0x000000FF)
 	);
-}
-
-void utils::write_uint32(uint8_t* dest, const uint32_t value)
-{
-	dest[0] = (value & 0xFF000000) >> 24;
-	dest[1] = (value & 0x00FF0000) >> 16;
-	dest[2] = (value & 0x0000FF00) >> 8;
-	dest[3] = (value & 0x000000FF);
 }

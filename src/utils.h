@@ -26,8 +26,5 @@ namespace utils {
 	void register_frontend_event_once(enum obs_frontend_event event, event_cb cb, void* private_data);
 
 	uint16_t read_uint16(const uint8_t* src);
-	void write_uint16(uint8_t* dest, const uint16_t value);
-
 	uint32_t read_uint32(const uint8_t* src);
-	void write_uint32(uint8_t* dest, const uint32_t value);
 };
