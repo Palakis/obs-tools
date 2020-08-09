@@ -24,7 +24,7 @@ endif()
 find_package(LibObs REQUIRED)
 find_package(Qt5 REQUIRED COMPONENTS Core Widgets)
 
-if (UNIX)
+if (UNIX OR APPLE)
     set(CLSOCKET_SHARED OFF)
 endif()
 set(CLSOCKET_DEP_ONLY ON)
