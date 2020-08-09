@@ -38,13 +38,13 @@ struct aes67_source
 {
 	obs_source_t* source;
 	bool running;
-	pthread_t receiver_thread;
-	const char* multicast_group;
-	const char* multicast_interface;
-	int sample_rate;
+	pthread_t receiverThread;
+	const char* multicastGroup;
+	const char* multicastInterface;
+	int sampleRate;
 	enum speaker_layout speakers;
-	int sample_format;
-	os_performance_token_t* perf_token;
+	int sampleFormat;
+	os_performance_token_t* perfToken;
 };
 
 const char* aes67_source_getname(void* data)
@@ -112,10 +112,10 @@ void* aes67_receiver_thread(void* data)
 	
 	blog(LOG_INFO, "receiver thread started for source '%s'", obs_source_get_name(s->source));
 
-	if (s->perf_token) {
-		os_end_high_performance(s->perf_token);
+	if (s->perfToken) {
+		os_end_high_performance(s->perfToken);
 	}
-	s->perf_token = os_request_high_performance("AES67 Receiver Thread");
+	s->perfToken = os_request_high_performance("AES67 Receiver Thread");
 
 	CPassiveSocket socket(CPassiveSocket::CSocketType::SocketTypeUdp);
 	socket.Initialize();
@@ -132,14 +132,14 @@ void* aes67_receiver_thread(void* data)
 	struct obs_source_audio audioFrame = {};
 	memset(&audioFrame, 0, sizeof(audioFrame));
 	audioFrame.speakers = s->speakers;
-	audioFrame.samples_per_sec = s->sample_rate;
+	audioFrame.samples_per_sec = s->sampleRate;
 
 	// Buffer for at most 240 32-bit samples of surround audio
 	int32_t l32ConvBuf[MAX_L24_SAMPLES_PER_PACKET * 8];
 	memset(&l32ConvBuf, 0, sizeof(l32ConvBuf));
 
 	bool convert24BitTo32Bit = false;
-	switch (s->sample_format) {
+	switch (s->sampleFormat) {
 		case O_SAMPLE_FORMAT_L16:
 			audioFrame.format = AUDIO_FORMAT_16BIT;
 			break;
@@ -150,12 +150,14 @@ void* aes67_receiver_thread(void* data)
 			break;
 
 		default:
-			blog(LOG_ERROR, "unsupported sample format: %d", s->sample_format);
+			blog(LOG_ERROR, "unsupported sample format: %d", s->sampleFormat);
 			goto receiver_finished;
 	}
 
-	if (!socket.BindMulticast(s->multicast_interface, s->multicast_group, 5004)) {
-		blog(LOG_ERROR, "failed to bind to multicast group %s", s->multicast_group);
+	if (!socket.BindMulticast(s->multicastInterface, s->multicastGroup, 5004)) {
+		blog(LOG_ERROR, "failed to bind to multicast group '%s' on interface '%s'",
+			s->multicastGroup, s->multicastInterface
+		);
 		goto receiver_finished;
 	}
 
@@ -199,8 +201,8 @@ void* aes67_receiver_thread(void* data)
 	socket.Close();
 
 receiver_finished:
-	os_end_high_performance(s->perf_token);
-	s->perf_token = NULL;
+	os_end_high_performance(s->perfToken);
+	s->perfToken = NULL;
 
 	blog(LOG_INFO, "receiver thread ended for source '%s'", obs_source_get_name(s->source));
 	return NULL;
@@ -212,27 +214,25 @@ void aes67_source_update(void* data, obs_data_t* settings)
 	
 	if (s->running) {
 		s->running = false;
-		pthread_join(s->receiver_thread, NULL);	
+		pthread_join(s->receiverThread, NULL);	
 	}
 	s->running = false;
 
-	s->multicast_group = obs_data_get_string(settings, P_MULTICAST_GROUP);
-	s->multicast_interface = obs_data_get_string(settings, P_MULTICAST_INTERFACE);
-	s->sample_rate = obs_data_get_int(settings, P_SAMPLE_RATE);
+	s->multicastGroup = obs_data_get_string(settings, P_MULTICAST_GROUP);
+	s->multicastInterface = obs_data_get_string(settings, P_MULTICAST_INTERFACE);
+	s->sampleRate = obs_data_get_int(settings, P_SAMPLE_RATE);
 	s->speakers = (enum speaker_layout)obs_data_get_int(settings, P_SPEAKER_LAYOUT);
-	s->sample_format = obs_data_get_int(settings, P_SAMPLE_FORMAT);
-
-	// TODO setup receiver
+	s->sampleFormat = obs_data_get_int(settings, P_SAMPLE_FORMAT);
 
 	s->running = true;
-	pthread_create(&s->receiver_thread, NULL, &aes67_receiver_thread, (void*)s);
+	pthread_create(&s->receiverThread, NULL, &aes67_receiver_thread, (void*)s);
 }
 
 void* aes67_source_create(obs_data_t* settings, obs_source_t* source)
 {
 	auto s = (struct aes67_source*)bzalloc(sizeof(struct aes67_source));
 	s->source = source;
-	s->perf_token = NULL;
+	s->perfToken = NULL;
 	aes67_source_update(s, settings);
 	return s;
 }
@@ -242,7 +242,7 @@ void aes67_source_destroy(void* data)
 	auto s = (struct aes67_source*)data;
 	if (s->running) {
 		s->running = false;
-		pthread_join(s->receiver_thread, NULL);	
+		pthread_join(s->receiverThread, NULL);	
 	}
 	bfree(s);
 }
