@@ -26,6 +26,7 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 #include "rtp.h"
 
 #define P_MULTICAST_GROUP "multicast_group"
+#define P_MULTICAST_INTERFACE "multicast_interface"
 #define P_SAMPLE_RATE "sample_rate"
 #define P_SPEAKER_LAYOUT "speaker_layout"
 #define P_SAMPLE_FORMAT "sample_format"
@@ -39,6 +40,7 @@ struct aes67_source
 	bool running;
 	pthread_t receiver_thread;
 	const char* multicast_group;
+	const char* multicast_interface;
 	int sample_rate;
 	enum speaker_layout speakers;
 	int sample_format;
@@ -64,6 +66,11 @@ obs_properties_t* aes67_source_getproperties(void* data)
 	);
 
 	obs_property_t* prop;
+	// prop = obs_properties_add_list(props,
+	// 	P_MULTICAST_INTERFACE, "Multicast Interface",
+	// 	OBS_COMBO_TYPE_EDITABLE, OBS_COMBO_FORMAT_STRING
+	// );
+
 	prop = obs_properties_add_list(props,
 		P_SAMPLE_RATE, "Sample Rate",
 		OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_INT
@@ -146,7 +153,7 @@ void* aes67_receiver_thread(void* data)
 			goto receiver_finished;
 	}
 
-	if (!socket.BindMulticast(NULL, s->multicast_group, 5004)) {
+	if (!socket.BindMulticast(s->multicast_interface, s->multicast_group, 5004)) {
 		blog(LOG_ERROR, "failed to bind to multicast group %s", s->multicast_group);
 		goto receiver_finished;
 	}
@@ -213,6 +220,7 @@ void aes67_source_update(void* data, obs_data_t* settings)
 	s->running = false;
 
 	s->multicast_group = obs_data_get_string(settings, P_MULTICAST_GROUP);
+	s->multicast_interface = obs_data_get_string(settings, P_MULTICAST_INTERFACE);
 	s->sample_rate = obs_data_get_int(settings, P_SAMPLE_RATE);
 	s->speakers = (enum speaker_layout)obs_data_get_int(settings, P_SPEAKER_LAYOUT);
 	s->sample_format = obs_data_get_int(settings, P_SAMPLE_FORMAT);
