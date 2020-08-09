@@ -44,3 +44,4 @@ struct rtp_packet {
 
 void rtp_packet_deinit(struct rtp_packet* packet);
 bool rtp_packet_decode(const uint8_t* buf, uint32_t bufLen, struct rtp_packet* packet);
+size_t rtp_packet_get_byte_count(const rtp_packet* packet);

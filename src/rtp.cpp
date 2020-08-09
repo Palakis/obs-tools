@@ -16,33 +16,31 @@ You should have received a copy of the GNU General Public License along
 with this program. If not, see <https://www.gnu.org/licenses/>
 */
 
-#include <memory>
-#include <cstring>
-#include <iostream>
 #include <util/bmem.h>
 
+#include "plugin-macros.generated.h"
 #include "rtp.h"
 #include "utils.h"
 
 using namespace std;
 using namespace utils;
 
-bool rtp_packet_decode(const uint8_t* buf, uint32_t bufLen, rtp_packet* packet)
+bool rtp_packet_decode(const uint8_t* buf, const uint32_t bufLen, rtp_packet* packet)
 {
 	if (!packet) {
-		cerr << "rtp_packet_decode: invalid dest packet pointer" << endl;
+		blog(LOG_ERROR, "rtp_packet_decode: invalid dest packet pointer");
 		return false;
 	}
 
 	if (bufLen <= 12) {
-		cerr << "rtp_packet_decode: packet too short (" << bufLen << "bytes)" << endl;
+		blog(LOG_ERROR, "rtp_packet_decode: packet too short (%d bytes instead of > 12)", bufLen);
 		return false;
 	}
 
 	// First byte
 	uint8_t rtp_version = ((buf[0] >> 6) & 0b11);
 	if (rtp_version != 2) {
-		cout << "rtp_packet_decode: invalid packet version: " << packet->version << endl;
+		blog(LOG_ERROR, "rtp_packet_decode: invalid packet version: %d", rtp_version);
 		return false;
 	}
 	packet->version = rtp_version;
@@ -72,25 +70,45 @@ bool rtp_packet_decode(const uint8_t* buf, uint32_t bufLen, rtp_packet* packet)
 	packet->ssrc = read_uint32(&buf[index]);
 	index += 4;
 
+	size_t expectedBufferLength;
+
 	if (packet->csrcCount > 0) {
 		if (packet->csrcCount > 15) {
-			cerr << "rtp_packet_decode: invalid CSRC count"
-				 << " (found " << packet->csrcCount << ", should not be above 15)" << endl;
+			blog(LOG_ERROR, "rtp_packet_decode: invalid CSRC count (found %d, should not be above 15)", packet->csrcCount);
 			return false;
 		}
 		
+		size_t csrcFieldLength = (packet->csrcCount * 4);
+		expectedBufferLength = index + csrcFieldLength;
+		if (expectedBufferLength > bufLen) {
+			blog(LOG_ERROR, "rtp_packet_decode: buffer too short for specified CSRC count (%d bytes < %d)", bufLen, expectedBufferLength);
+			return false;
+		}
+
 		for (size_t i = 0; i < packet->csrcCount; i++) {
 			const uint8_t* valuePtr = &buf[index + (i * sizeof(uint32_t))];
 			packet->csrc[i] = read_uint32(valuePtr);
 		}
 
-		index += (packet->csrcCount * 4);;
+		index += csrcFieldLength;
 	}
 
 	if (packet->extension) {
+		expectedBufferLength = (index + 4);
+		if (expectedBufferLength > bufLen) {
+			blog(LOG_ERROR, "rtp_packet_decode: buffer too short for extension header (%d bytes < %d)", bufLen, expectedBufferLength);
+			return false;
+		}
+
 		packet->extensionHeaderId = read_uint16(&buf[index]);
 		packet->extensionHeaderLength = read_uint16(&buf[index + 2]);
 		index += 4;
+
+		expectedBufferLength = (index + packet->extensionHeaderLength);
+		if (expectedBufferLength > bufLen) {
+			blog(LOG_ERROR, "rtp_packet_decode: buffer too short for specified extension data length (%d bytes < %d)", bufLen, expectedBufferLength);
+			return false;
+		}
 
 		memcpy(
 			&packet->extensionHeader, &buf[index],
@@ -109,3 +127,21 @@ bool rtp_packet_decode(const uint8_t* buf, uint32_t bufLen, rtp_packet* packet)
 	// TODO return read bytes
 	return true;
 }
+
+size_t rtp_packet_get_byte_count(const rtp_packet* packet)
+{
+	if (!packet) {
+		return 0;
+	}
+
+	// minimal size: 12 bytes + 4 bytes per CSRC + payload length
+	size_t packetSize = 12 + (packet->csrcCount * sizeof(uint32_t)) + packet->payloadLength;
+
+    // if extension is set, add 4 bytes of extension preamble + extension header byte count
+	if (packet->extension) {
+		packetSize += (4 + packet->extensionHeaderLength);
+	}
+
+	return packetSize;
+}
+
