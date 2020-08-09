@@ -70,7 +70,7 @@ bool rtp_packet_decode(const uint8_t* buf, const uint32_t bufLen, rtp_packet* pa
 	packet->ssrc = read_uint32(&buf[index]);
 	index += 4;
 
-	size_t expectedBufferLength;
+	uint32_t expectedBufferLength;
 
 	if (packet->csrcCount > 0) {
 		if (packet->csrcCount > 15) {
