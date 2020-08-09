@@ -126,7 +126,7 @@ void* aes67_receiver_thread(void* data)
 	audioFrame.speakers = s->speakers;
 	audioFrame.samples_per_sec = s->sample_rate;
 
-	int32_t l32ConvBuf[MAX_L24_SAMPLES_PER_PACKET * s->speakers];
+	uint8_t l32ConvBuf[MAX_L24_SAMPLES_PER_PACKET * s->speakers * 4];
 	memset(&l32ConvBuf, 0, sizeof(l32ConvBuf));
 
 	bool convert24BitTo32Bit = false;
@@ -167,18 +167,21 @@ void* aes67_receiver_thread(void* data)
 		if (convert24BitTo32Bit) {
 			// L24 = three-byte samples
 			size_t samples = (rtpPacket.payloadLength / 3);
+			for (size_t i = 0; i < samples; i++) {
+				// S32LE
+				uint8_t* dst = ((uint8_t*)&l32ConvBuf) + (i * 4);
+				// S24LE
+				uint8_t* src = ((uint8_t*)&rtpPacket.payload) + (i * 3);
+
+				// Move the sign bit to the beginning of the 32-bit number
+				dst[0] = (src[0] & 0x80);
+				dst[1] = (src[0] & 0x7F);
+				dst[2] = src[1];
+				dst[3] = src[2];
+			}
+
 			audioFrame.frames = (samples / (int)s->speakers);
 			audioFrame.data[0] = (uint8_t*)&l32ConvBuf;
-
-			for (size_t i = 0; i < samples; i++) {
-				uint8_t* sample = (&rtpPacket.payload)[i];
-				// convert each 24-bit (three-byte) sample to a 32-bit (four-byte) sample
-				l32ConvBuf[i] = (
-					((sample[0] << 16) & 0xFF0000) |
-					((sample[1] << 8)  & 0x00FF00) |
-					( sample[2]        & 0x0000FF)
-				);
-			}
 		} else {
 			// L16 = two-byte samples
 			audioFrame.frames = ((rtpPacket.payloadLength / 2) / (int)s->speakers);
