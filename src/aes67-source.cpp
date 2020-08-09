@@ -162,7 +162,7 @@ void* aes67_receiver_thread(void* data)
 			continue;
 		}
 
-		audioFrame.timestamp = os_gettime_ns();
+		audioFrame.timestamp = rtpPacket.timestamp;
 
 		if (convert24BitTo32Bit) {
 			// L24 = three-byte samples
