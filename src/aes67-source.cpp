@@ -24,6 +24,7 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 
 #include "plugin-macros.generated.h"
 #include "rtp.h"
+#include "utils.h"
 
 #define P_MULTICAST_GROUP "multicast_group"
 #define P_MULTICAST_INTERFACE "multicast_interface"
@@ -66,10 +67,17 @@ obs_properties_t* aes67_source_getproperties(void* data)
 	);
 
 	obs_property_t* prop;
-	// prop = obs_properties_add_list(props,
-	// 	P_MULTICAST_INTERFACE, "Multicast Interface",
-	// 	OBS_COMBO_TYPE_EDITABLE, OBS_COMBO_FORMAT_STRING
-	// );
+	prop = obs_properties_add_list(props,
+		P_MULTICAST_INTERFACE, "Multicast Interface",
+		OBS_COMBO_TYPE_EDITABLE, OBS_COMBO_FORMAT_STRING
+	);
+
+	utils::network_interfaces ifaces = utils::list_network_interfaces();
+	for (auto it = ifaces.begin(); it != ifaces.end(); it++) {
+		const char* name = it->first.c_str();
+		const char* address = it->second.c_str();
+		obs_property_list_add_string(prop, name, address);
+	}
 
 	prop = obs_properties_add_list(props,
 		P_SAMPLE_RATE, "Sample Rate",

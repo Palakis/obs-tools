@@ -20,11 +20,18 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 
 #include <obs-frontend-api.h>
 #include <stdint.h>
+#include <vector>
+#include <utility>
+#include <string>
 
 namespace utils {
+	typedef std::vector<std::pair<std::string, std::string>> network_interfaces;
+
 	typedef void (*event_cb)(void* private_data);
 	void register_frontend_event_once(enum obs_frontend_event event, event_cb cb, void* private_data);
 
 	uint16_t read_uint16(const uint8_t* src);
 	uint32_t read_uint32(const uint8_t* src);
+
+	utils::network_interfaces list_network_interfaces();
 };
