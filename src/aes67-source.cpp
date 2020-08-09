@@ -182,7 +182,7 @@ void* aes67_receiver_thread(void* data)
 					(src[0] << 24) |
 					(src[1] << 16) |
 					(src[2] << 8)
-				) >> 8) * 100;
+				) >> 8) * 251; // 48 dB gain to compensate the dynamic range difference between 24-bit (145 dB) and 32-bit (193 dB)
 			}
 
 			audioFrame.frames = (samples / (int)s->speakers);
