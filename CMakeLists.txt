@@ -24,7 +24,9 @@ endif()
 find_package(LibObs REQUIRED)
 find_package(Qt5 REQUIRED COMPONENTS Core Widgets)
 
-set(CLSOCKET_SHARED OFF)
+if (UNIX)
+    set(CLSOCKET_SHARED OFF)
+endif()
 set(CLSOCKET_DEP_ONLY ON)
 add_subdirectory(deps/clsocket EXCLUDE_FROM_ALL)
 
@@ -146,11 +148,23 @@ if(WIN32)
                 "$<TARGET_FILE:${CMAKE_PROJECT_NAME}>"
                 "${RELEASE_DIR}/obs-plugins/${ARCH_NAME}"
         )
+        
+        COMMAND if $<OR:$<CONFIG:Release>,$<CONFIG:RelWithDebInfo>>==1 (
+            "${CMAKE_COMMAND}" -E copy
+                "$<TARGET_FILE:clsocket>"
+                "${RELEASE_DIR}/obs-plugins/${ARCH_NAME}"
+        )
 
-        # If config is RelWithDebInfo, copy the pdb file
+        # If config is RelWithDebInfo, copy .pdb files
         COMMAND if $<CONFIG:RelWithDebInfo>==1 (
             "${CMAKE_COMMAND}" -E copy
                 "$<TARGET_PDB_FILE:${CMAKE_PROJECT_NAME}>"
+                "${RELEASE_DIR}/obs-plugins/${ARCH_NAME}"
+        )
+
+        COMMAND if $<CONFIG:RelWithDebInfo>==1 (
+            "${CMAKE_COMMAND}" -E copy
+                "$<TARGET_PDB_FILE:clsocket>"
                 "${RELEASE_DIR}/obs-plugins/${ARCH_NAME}"
         )
 
@@ -164,6 +178,18 @@ if(WIN32)
         COMMAND if $<CONFIG:Debug>==1 (
             "${CMAKE_COMMAND}" -E copy
                 "$<TARGET_PDB_FILE:${CMAKE_PROJECT_NAME}>"
+                "${LIBOBS_INCLUDE_DIR}/../${OBS_BUILDDIR_ARCH}/rundir/$<CONFIG>/obs-plugins/${ARCH_NAME}"
+        )
+
+        COMMAND if $<CONFIG:Debug>==1 (
+            "${CMAKE_COMMAND}" -E copy
+                "$<TARGET_FILE:clsocket>"
+                "${LIBOBS_INCLUDE_DIR}/../${OBS_BUILDDIR_ARCH}/rundir/$<CONFIG>/obs-plugins/${ARCH_NAME}"
+        )
+
+        COMMAND if $<CONFIG:Debug>==1 (
+            "${CMAKE_COMMAND}" -E copy
+                "$<TARGET_PDB_FILE:clsocket>"
                 "${LIBOBS_INCLUDE_DIR}/../${OBS_BUILDDIR_ARCH}/rundir/$<CONFIG>/obs-plugins/${ARCH_NAME}"
         )
 
