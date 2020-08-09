@@ -65,12 +65,3 @@ uint32_t utils::read_uint32(const uint8_t* src)
 		( src[3]        & 0x000000FF)
 	);
 }
-
-utils::network_interfaces utils::list_network_interfaces()
-{
-	network_interfaces ifaces;
-
-
-
-	return ifaces;
-}
