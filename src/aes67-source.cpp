@@ -153,7 +153,6 @@ void* aes67_receiver_thread(void* data)
 	while (s->running) {
 		int32 receivedBytes = socket.Receive(MAX_PACKET_LENGTH, (uint8_t*)&recvBuf);
 		if (receivedBytes <= 0) {
-			blog(LOG_WARNING, "No bytes received (%d)", receivedBytes);
 			continue;
 		}
 
@@ -232,8 +231,10 @@ void* aes67_source_create(obs_data_t* settings, obs_source_t* source)
 void aes67_source_destroy(void* data)
 {
 	auto s = (struct aes67_source*)data;
-	s->running = false;
-	pthread_join(s->receiver_thread, NULL);
+	if (s->running) {
+		s->running = false;
+		pthread_join(s->receiver_thread, NULL);	
+	}
 	bfree(s);
 }
 
