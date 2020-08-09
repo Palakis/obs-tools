@@ -100,6 +100,7 @@ obs_properties_t* aes67_source_getproperties(void* data)
 void aes67_source_getdefaults(obs_data_t* settings)
 {
 	obs_data_set_default_string(settings, P_MULTICAST_GROUP, "");
+	obs_data_set_default_string(settings, P_MULTICAST_INTERFACE, NULL);
 	obs_data_set_default_int(settings, P_SAMPLE_RATE, 48000);
 	obs_data_set_default_int(settings, P_SPEAKER_LAYOUT, (int)SPEAKERS_STEREO);
 	obs_data_set_default_int(settings, P_SAMPLE_FORMAT, O_SAMPLE_FORMAT_L24);
