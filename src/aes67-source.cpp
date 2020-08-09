@@ -126,7 +126,8 @@ void* aes67_receiver_thread(void* data)
 	audioFrame.speakers = s->speakers;
 	audioFrame.samples_per_sec = s->sample_rate;
 
-	uint8_t l32ConvBuf[MAX_L24_SAMPLES_PER_PACKET * s->speakers * 4];
+	// Buffer for at most 240 32-bit samples of surround audio
+	uint8_t l32ConvBuf[MAX_L24_SAMPLES_PER_PACKET * 8 * 4];
 	memset(&l32ConvBuf, 0, sizeof(l32ConvBuf));
 
 	bool convert24BitTo32Bit = false;
