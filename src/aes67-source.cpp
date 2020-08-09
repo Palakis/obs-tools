@@ -184,8 +184,8 @@ void* aes67_receiver_thread(void* data)
 
 				// Move the sign bit to the beginning of the 32-bit number
 				bool isNegative = ( (src[0] & 0x80) == 0x80 );
-				dst[0] = ( isNegative ? src[0] : 0 );
-				dst[1] = src[0];
+				dst[0] = ( isNegative ? 0xFF : 0 );
+				dst[1] = ( isNegative ? (src[0] & 0x7F) : src[0]);
 				dst[2] = src[1];
 				dst[3] = src[2];
 			}
