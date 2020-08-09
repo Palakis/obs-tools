@@ -183,8 +183,9 @@ void* aes67_receiver_thread(void* data)
 				uint8_t* src = ((uint8_t*)&rtpPacket.payload) + (i * 3);
 
 				// Move the sign bit to the beginning of the 32-bit number
-				dst[0] = (src[0] & 0x80);
-				dst[1] = (src[0] & 0x7F);
+				bool isNegative = ( (src[0] & 0x80) == 0x80 );
+				dst[0] = ( isNegative ? src[0] : 0 );
+				dst[1] = src[0];
 				dst[2] = src[1];
 				dst[3] = src[2];
 			}
