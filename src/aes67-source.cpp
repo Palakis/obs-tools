@@ -71,7 +71,7 @@ obs_properties_t* aes67_source_getproperties(void* data)
 	obs_property_t* prop;
 	prop = obs_properties_add_list(props,
 		P_MULTICAST_INTERFACE, "Multicast Interface",
-		OBS_COMBO_TYPE_EDITABLE, OBS_COMBO_FORMAT_STRING
+		OBS_COMBO_TYPE_LIST, OBS_COMBO_FORMAT_STRING
 	);
 	obs_property_list_add_string(prop, "Any", NULL);
 
