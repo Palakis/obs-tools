@@ -21,6 +21,8 @@ with this program. If not, see <https://www.gnu.org/licenses/>
 #include <util/platform.h>
 #include <util/threading.h>
 #include <PassiveSocket.h>
+#include <QtCore/QList>
+#include <QtNetwork/QNetworkInterface>
 
 #include "plugin-macros.generated.h"
 #include "rtp.h"
@@ -67,10 +69,32 @@ obs_properties_t* aes67_source_getproperties(void* data)
 	);
 
 	obs_property_t* prop;
-	// prop = obs_properties_add_list(props,
-	// 	P_MULTICAST_INTERFACE, "Multicast Interface",
-	// 	OBS_COMBO_TYPE_EDITABLE, OBS_COMBO_FORMAT_STRING
-	// );
+	prop = obs_properties_add_list(props,
+		P_MULTICAST_INTERFACE, "Multicast Interface",
+		OBS_COMBO_TYPE_EDITABLE, OBS_COMBO_FORMAT_STRING
+	);
+	obs_property_list_add_string(prop, "Any", NULL);
+
+	QList<QNetworkInterface> interfaces = QNetworkInterface::allInterfaces();
+	for (QNetworkInterface iface : interfaces) {
+		QString ifaceName = iface.name();
+		QList<QNetworkAddressEntry> addresses = iface.addressEntries();
+		for (QNetworkAddressEntry addr : addresses) {
+			QHostAddress ifaceIp = addr.ip();
+			if (ifaceIp.protocol() != QAbstractSocket::IPv4Protocol) {
+				continue;
+			}
+
+			QString ipString = ifaceIp.toString();
+			QString entryName = QString("%1 (%2)")
+				.arg(ipString).arg(ifaceName);
+
+			obs_property_list_add_string(prop,
+				entryName.toUtf8().constData(),
+				ipString.toUtf8().constData()
+			);
+		}
+	}
 
 	prop = obs_properties_add_list(props,
 		P_SAMPLE_RATE, "Sample Rate",
