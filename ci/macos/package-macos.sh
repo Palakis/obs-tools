@@ -37,7 +37,7 @@ install_name_tool \
 	-change /usr/local/opt/qt/lib/QtCore.framework/Versions/5/QtCore \
 		@executable_path/../Frameworks/QtCore.framework/Versions/5/QtCore \
 	-change /usr/local/opt/qt/lib/QtNetwork.framework/Versions/5/QtNetwork \
-		@loader_path/QtNetwork
+		@loader_path/QtNetwork \
 	./build/$PLUGIN_NAME.so
 
 # Check if replacement worked
