@@ -15,6 +15,8 @@ fi
 echo "=> Preparing package build"
 export QT_CELLAR_PREFIX="$(/usr/bin/find /usr/local/Cellar/qt -d 1 | sort -t '.' -k 1,1n -k 2,2n -k 3,3n | tail -n 1)"
 
+export NET_LIB="/usr/local/opt/qt/lib/QtNetwork.framework/QtNetwork"
+
 GIT_HASH=$(git rev-parse --short HEAD)
 GIT_BRANCH_OR_TAG=$(git name-rev --name-only HEAD | awk -F/ '{print $NF}')
 
@@ -22,6 +24,9 @@ PKG_VERSION="$GIT_HASH-$GIT_BRANCH_OR_TAG"
 
 FILENAME_UNSIGNED="$PLUGIN_NAME-$PKG_VERSION-Unsigned.pkg"
 FILENAME="$PLUGIN_NAME-$PKG_VERSION.pkg"
+
+echo "=> Copying QtNetwork"
+cp $NET_LIB ./build
 
 echo "=> Modifying $PLUGIN_NAME.so"
 install_name_tool \
@@ -31,6 +36,8 @@ install_name_tool \
 		@executable_path/../Frameworks/QtGui.framework/Versions/5/QtGui \
 	-change /usr/local/opt/qt/lib/QtCore.framework/Versions/5/QtCore \
 		@executable_path/../Frameworks/QtCore.framework/Versions/5/QtCore \
+	-change /usr/local/opt/qt/lib/QtNetwork.framework/Versions/5/QtNetwork \
+		@loader_path/QtNetwork
 	./build/$PLUGIN_NAME.so
 
 # Check if replacement worked

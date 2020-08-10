@@ -22,7 +22,7 @@ include(external/FindLibObs.cmake)
 endif()
 
 find_package(LibObs REQUIRED)
-find_package(Qt5 REQUIRED COMPONENTS Core Widgets)
+find_package(Qt5 REQUIRED COMPONENTS Core Widgets Network)
 
 if (UNIX OR APPLE)
     set(CLSOCKET_SHARED OFF)
@@ -76,6 +76,7 @@ include_directories(
 	"${LIBOBS_INCLUDE_DIR}/../UI/obs-frontend-api"
 	${Qt5Core_INCLUDES}
 	${Qt5Widgets_INCLUDES}
+    ${Qt5Network_INCLUDES}
     "${CMAKE_SOURCE_DIR}/deps/clsocket/src"
 )
 
@@ -83,6 +84,7 @@ target_link_libraries(${CMAKE_PROJECT_NAME}
 	libobs
 	Qt5::Core
 	Qt5::Widgets
+    Qt5::Network
     clsocket
 )
 
@@ -146,12 +148,8 @@ if(WIN32)
         COMMAND if $<OR:$<CONFIG:Release>,$<CONFIG:RelWithDebInfo>>==1 (
             "${CMAKE_COMMAND}" -E copy
                 "$<TARGET_FILE:${CMAKE_PROJECT_NAME}>"
-                "${RELEASE_DIR}/obs-plugins/${ARCH_NAME}"
-        )
-        
-        COMMAND if $<OR:$<CONFIG:Release>,$<CONFIG:RelWithDebInfo>>==1 (
-            "${CMAKE_COMMAND}" -E copy
                 "$<TARGET_FILE:clsocket>"
+			    "${QTDIR}/bin/Qt5Network.dll"
                 "${RELEASE_DIR}/obs-plugins/${ARCH_NAME}"
         )
 
@@ -159,11 +157,6 @@ if(WIN32)
         COMMAND if $<CONFIG:RelWithDebInfo>==1 (
             "${CMAKE_COMMAND}" -E copy
                 "$<TARGET_PDB_FILE:${CMAKE_PROJECT_NAME}>"
-                "${RELEASE_DIR}/obs-plugins/${ARCH_NAME}"
-        )
-
-        COMMAND if $<CONFIG:RelWithDebInfo>==1 (
-            "${CMAKE_COMMAND}" -E copy
                 "$<TARGET_PDB_FILE:clsocket>"
                 "${RELEASE_DIR}/obs-plugins/${ARCH_NAME}"
         )
@@ -172,24 +165,11 @@ if(WIN32)
         COMMAND if $<CONFIG:Debug>==1 (
             "${CMAKE_COMMAND}" -E copy
                 "$<TARGET_FILE:${CMAKE_PROJECT_NAME}>"
-                "${LIBOBS_INCLUDE_DIR}/../${OBS_BUILDDIR_ARCH}/rundir/$<CONFIG>/obs-plugins/${ARCH_NAME}"
-        )
-
-        COMMAND if $<CONFIG:Debug>==1 (
-            "${CMAKE_COMMAND}" -E copy
-                "$<TARGET_PDB_FILE:${CMAKE_PROJECT_NAME}>"
-                "${LIBOBS_INCLUDE_DIR}/../${OBS_BUILDDIR_ARCH}/rundir/$<CONFIG>/obs-plugins/${ARCH_NAME}"
-        )
-
-        COMMAND if $<CONFIG:Debug>==1 (
-            "${CMAKE_COMMAND}" -E copy
                 "$<TARGET_FILE:clsocket>"
-                "${LIBOBS_INCLUDE_DIR}/../${OBS_BUILDDIR_ARCH}/rundir/$<CONFIG>/obs-plugins/${ARCH_NAME}"
-        )
-
-        COMMAND if $<CONFIG:Debug>==1 (
-            "${CMAKE_COMMAND}" -E copy
+                "${QTDIR}/bin/Qt5Networkd.dll"
+                "$<TARGET_PDB_FILE:${CMAKE_PROJECT_NAME}>"
                 "$<TARGET_PDB_FILE:clsocket>"
+                "${QTDIR}/bin/Qt5Networkd.pdb"
                 "${LIBOBS_INCLUDE_DIR}/../${OBS_BUILDDIR_ARCH}/rundir/$<CONFIG>/obs-plugins/${ARCH_NAME}"
         )
 
