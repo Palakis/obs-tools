@@ -180,8 +180,9 @@ void* aes67_receiver_thread(void* data)
 	}
 
 	if (!socket.BindMulticast(s->multicastInterface, s->multicastGroup, 5004)) {
-		blog(LOG_ERROR, "failed to bind to multicast group '%s' on interface '%s'",
-			s->multicastGroup, s->multicastInterface
+		blog(LOG_ERROR, "failed to bind to multicast group '%s' on interface '%s': %s",
+			s->multicastGroup, s->multicastInterface,
+			socket.DescribeError()
 		);
 		goto receiver_finished;
 	}
